@@ -1,12 +1,16 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.cdt.core.dom.ast.ASTVisitor;
 import org.eclipse.cdt.core.dom.ast.IASTBinaryExpression;
 import org.eclipse.cdt.core.dom.ast.IASTCompoundStatement;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
+import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
+import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.gnu.cpp.GPPLanguage;
@@ -41,10 +45,9 @@ public class Main {
 		ASTVisitor visitor = new ASTVisitor(true) {
 	        public int visit(IASTName name) {
 	            String prtName = name.toString();
-	            if (prtName.length() == 0)
-	                prtName = name.getRawSignature(); // use pre pre-processor
-	            // value
-	            //System.out.println("Visiting name: " + prtName);
+	            if (prtName.length() == 0){
+	                prtName = name.getRawSignature();
+	            }
 	            return PROCESS_CONTINUE;
 	        }
 	        
@@ -90,6 +93,23 @@ public class Main {
 	        }
 		};
 		
-	    translationUnit.accept(visitor);
+		ASTVisitor extractFunctionSignatures = new ASTVisitor(true) {
+			public int visit(IASTDeclarator node){
+				Pattern pattern = Pattern.compile("(.*\\(.*\\))");
+				Matcher matcher = pattern.matcher(node.getRawSignature());
+				
+				if(matcher.find()){
+					System.out.println(node.getRawSignature());
+					IASTNode parameters[] = node.getChildren();
+					for(int i = 1; i < parameters.length; i++){
+						System.out.println(parameters[i].getRawSignature());
+					}
+				}
+				
+	            return PROCESS_CONTINUE;
+			}
+		};
+		
+	    translationUnit.accept(extractFunctionSignatures);
 	}
 }
