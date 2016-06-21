@@ -26,7 +26,8 @@ import org.eclipse.core.runtime.CoreException;
 public class Main {
 
 	public static void main(String[] args) throws CoreException {
-		parse("C:\\Users\\guga\\Desktop\\code.c");
+		//parse("C:\\Users\\guga\\Desktop\\code.c");
+		parse("C:\\Users\\guga\\Downloads\\pipe.c");
 	}
 	
 	public static void parse(String str) throws CoreException{
@@ -110,6 +111,18 @@ public class Main {
 			}
 		};
 		
-	    translationUnit.accept(extractFunctionSignatures);
+		ASTVisitor detectStructure = new ASTVisitor(true) {
+			public int visit(IASTDeclaration node){
+				Pattern pattern = Pattern.compile("(struct.*)");
+				Matcher matcher = pattern.matcher(node.getRawSignature());
+				
+				if(matcher.find()){
+					System.out.println(node.getRawSignature() + "\n -------------match------------");
+				}
+				return PROCESS_CONTINUE;
+			}
+		};
+		
+	    translationUnit.accept(detectStructure);
 	}
 }
